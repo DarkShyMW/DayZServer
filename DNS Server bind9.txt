@@ -1,0 +1,66 @@
+﻿1. bind9 находится на диске BD-1. Настройка выполняется на машине ISP
+
+	apt install bind9 dnsutils bind9utils - установка
+	systemctl status named или service named status - статус
+	
+2. Первоначальная настройка. Обращайте внимание на специальные символы, здесь строгий синтаксис
+
+	vim /etc/bind/named.conf.options - открываем файл и удаляем только комментарии
+	Приводим файл к следующему виду (некоторые опции уже описаны в файле):
+	
+options {
+		directory "/var/cache/bind";
+		listen-on { any; }; - принимать запросы на все интерфейсы
+		
+		recursion no; - отключаем рекурсию, так сервер корневой
+		allow-query { any; }; - принмать запросы от всех хостов
+		
+		dnssec-validation no; - отключаем DNSSEC (обязательно)
+		listen-on-v6 { none; }; - запрет принимать запросы по протоколу IPv6
+};
+
+3. Описываем настройки зоны demo.wsr
+	vim /etc/bind/named.conf.local - удаляем всё и вносим следующую конфигурацию:
+	
+zone "demo.wsr" {
+		type master; - сервер является "хозяином" зоны
+		allow-transfer { 4.4.4.100; }; - разрешить делегирование зоны на SRV
+		file "/opt/dns/demo.wsr.zone"; - указываем файл с зоной
+};
+
+4. Создаем и настраиваем файл конфигурации зоны
+
+	mkdir /opt/dns - создаем директорию
+	cp /etc/bind/db.local /opt/dns/demo.wsr.zone - копируем шаблон зоны под нужным именем
+	chmod 665 /opt/dns/demo.wsr.zone - меняем права на файл
+	vim /etc/apparmor.d/usr.sbin.named
+	Видим всякие шаблоны по типу "/etc/bind/** r," и добавляем строчку "/opt/dns/** rw,"
+	service apparmor restart - перезапускаем сервис
+	vim /opt/dns/demo.wsr.zone - редактируем файл зоны (меняем только строки, где написаны комментарии) и приводим к следующему виду:
+	
+$TTL    604800
+@       IN      SOA     demo.wsr. root.demo.wsr.  //заменяем localhost на demo.wsr
+                              3         ; Serial // увеличиваем порядковый номер зоны на 1
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+@       IN      NS      demo.wsr.    //меняем localhost на demo.wsr
+@       IN      A       3.3.3.1		 //меняем 127.0.0.1 на 3.3.3.1
+//Добавляем следующие строки согласно Таблице 2
+isp				A		3.3.3.1
+www				A		4.4.4.100
+www				A		5.5.5.100
+internet		CNAME	isp
+
+5. Проверка работоспособности
+
+	service named restart - перезапускаем сервис
+	service named status - статус должен быть зелененький
+	journalctl -xe или cat /var/log/syslog - смотрим логи, если сервис не запускается; в логах хорошо описаны все ошибки конфигурации
+	
+	host (или nslookup) <hostname>.demo.wsr - делаем DNS-запрос
+	
+	Если ответа нет, то проверьте настройки DNS-сервера на интерфейсе с адресом 3.3.3.1

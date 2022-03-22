@@ -1,0 +1,37 @@
+﻿Логины и пароли на задание
+	Windows 10 CLI - User-P@ssw0rd //пароль ставим после установки системы
+	Debian - root-toor
+	Windows Server 2022 - Administrator-P@ssw0rd
+
+Пакеты и их местонахождение на дистрибутивах:
+	1. firewalld - BD1
+	2. wireguard - BD1
+	3. bind9 - BD1
+	4. chrony - BD1
+	5. samba - DVD
+	6. openssl - DVD
+	7. docker - дополнительный ISO-образ
+	8. nginx - BD1
+
+Основные команды Linux Debian:
+
+1. Хостнеймы и ip-адресация
+	exec bash - чтобы хостнейм стал отображаться в консоли
+	apt install network-manager - установка NMTUI
+	Установка hostname и настройка ip-адресации должны осуществляться через NMTUI
+	ip a - посмотреть настройки сетевых интерфейсов
+	ip r - посмотреть маршруты
+	
+2.На роутерах ISP, RTR-L, RTR-R:
+	vim /etc/sysctl.conf 
+	net.ipv4.ip_forward=1 - раскоментировать строчку и включить маршрутизацию на Debian
+	sysctl -p - активировать маршрутизацию
+
+3. Добавление репозитория
+	Меняем диск в настройках виртуальной машины, проверяем, что галка "Connected" активна
+	apt-cdrom add - добавление дискового репозитория
+	apt update - обновляем список пакетов после добавления репозитория
+
+4. Установка пакетов
+	apt install <package_name> - установка пакета
+	apt list | grep <package_name> или apt show <package_name> - проверка доступности пакета для установки
