@@ -35,3 +35,5 @@
 4. Установка пакетов
 	apt install <package_name> - установка пакета
 	apt list | grep <package_name> или apt show <package_name> - проверка доступности пакета для установки
+	
+5. Необходимо на всех машинах Linux включить возможность входа по SSH для пользователя root
