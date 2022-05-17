@@ -1,0 +1,62 @@
+1. После установки chrony на NTP редактируем файл конфигурации:
+
+	vim /etc/chrony/chrony.conf
+#######
+allow 3.3.3.0/24
+allow 4.4.4.0/24
+local stratum 4
+rtcsync
+makestep 10 10
+driftfile /var/lib/chrony/chrony.drift
+
+log tracking measurements statistics
+logdir /var/log/chrony
+#######
+
+2. Устанавливаем корректную временную зону и, желательно, текущее время:
+
+	timedatectl set-ntp 0
+	timedatectl set-time "HH:MM:SS"
+	timedatectl set-timezone Europe/Moscow
+	timedatectl set-ntp 1
+	hwclock -w
+
+3. Перезапускаем chrony:
+
+	service chrony restart
+	chronyc makestep - насильно синхронизируем время
+
+4. На CLI устанавливаем 3.3.3.1 в качестве NTP-сервера и проверяем работоспособность:
+
+	chronyc clients - проверка подключенных клиентов
+
+5. На SRV через Powershell или cmd производим следующую настройку (должно заработать):
+
+	sc config w32time start=auto - включаем автозапуск для службы времени
+	w32tm /config /syncfromflags:manual - синхронизируемся только из списка указанных серверов
+	w32tm /config /reliable:yes - делаем NTP-сервер надёжным (необязательно)
+	w32tm /config /manualpeerlist:4.4.4.1,0x8 - указываем NTP-сервер; "0х8" указать обязательно!
+	w32tm /config /update - обновляем конфигурацию NTP-сервера
+
+	w32tm /query /configuration - посмотреть всю конфигурацию
+	w32tm /query /status - посмотреть состояние службы
+
+6. На всех машинах, кроме ISP и CLI устанавливаем chrony, приводим файл к виду, указанному ниже и выполняем шаги №2 и №3
+
+#######
+server srv.int.demo.wsr prefer iburst
+driftfile /var/lib/chrony/chrony.drift
+rtcsync
+makestep 10 10
+
+log tracking measurements statistics
+logdir /var/log/chrony
+#######
+
+!NB 	1) chronyc sources - на клиенте NTP эта команда отображает статус синхронизации с NTP-сервером. Должна быть звездочка: ^*
+	2) Так как в конфигурации мы указываем доменное имя, лучше убедиться, что DNS везде прописан корректно
+	3) Настройки логирования указывать необязательно, но полезно для troubleshooting
+
+
+
+	
