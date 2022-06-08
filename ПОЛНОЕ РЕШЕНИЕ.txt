@@ -227,12 +227,37 @@
 	cd /etc/nginx
 	mv sites-enabled/default  sites-enabled/webapp.conf
 	vim sites-available/webapp.conf		
-			server {
-			listen 80;
-			server_name www.demo.wsr;
+
+	БЕЗ СЕРТИФИКАТА:
+	server {
+		listen 80;
+		server_name www.demo.wsr;
 		location / {
-				proxy_pass http://<container_ip_address>:5000;sys - проксируем все запросы в наш контейнер
-			}
+			proxy_pass http://<container_ip_address>:5000; - проксируем все запросы в наш контейнер
+		}
+	}
+
+
+
+
+	С СЕРТИФИКАТОМ SSL:
+	server {
+		listen 80;
+		server_name www.demo.wsr;
+		return 301 https://$host$request_uri;
+		}
+
+	server {
+        listen 443;
+        server_name www.demo.wsr;
+        ssl on;
+        ssl_certificate /etc/nginx/ssl/fullchain.pem; //путь до сертификата
+        ssl_certificate_key /etc/nginx/ssl/cert.key; //путь до pem-ключа сертификата
+        location / {
+			proxy_pass http://<container_ip_address>:5000; - проксируем все запросы в наш контейнер
+		}        
+	}
+
 			
 	CLI
 	 www.demo.wsr/
