@@ -76,6 +76,7 @@
 	
 	RTR-L
 	scp cli-sec.key cli-priv.key 5.5.5.100:/etc/wireguard/keys
+	
 	RTR-R
 	cat cli-sec.key serv-pub.key >> /etc/wireguard/wg0.conf
 	vim /etc/wireguard/wg0.conf
