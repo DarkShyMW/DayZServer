@@ -1,0 +1,26 @@
+Поменять имя сервера:
+в Server Manager нажимаем на Computer name
+Затем клацаем на Change -> в поле Computer name вводим имя сервера.
+ok
+Он спросит разрешение на перезагрузку - соглашаемся.
+
+Настройка IP:
+Нажимаем на значок планеты внизу справа.
+Network and internet settings -> Change adapter options -> клацаем 2 раза по порту Properties -> Internet Protocol Version 4 -> Use the following IP Address
+Вводим данные для SRV.
+В Preferred DNS прописываем 127.0.0.1
+ok
+
+Установка DNS:
+В Server Manager нажимаем на Manage -> Add Roles and Features -> Next -> Next -> Next -> Выбираем DNS Server -> Add Features -> Next -> Next -> Next -> install
+Tools -> DNS:
+Нажимаем 2 раза по SRV, у нас открывается список зон. Тут нам надо добваить Reverse Lookup Zones, для этого правой кнопкой нажимаем на Revers Lookup Zones,
+New Zone -> Next -> Next -> Next -> Network ID: ip-адресса локальных сетей (192.168.106(зависит от актета)), next -> next -> Allow both nonsecure and secure dynamic updates, next -> Finish
+New Zone -> Next -> Next -> Next -> Network ID: ip-адресса локальных сетей (172.16.106(зависит от актета)), next -> next -> Allow both nonsecure and secure dynamic updates, next -> Finish
+
+Теперь в Forward Lookup Zones:
+New Zone -> Next -> Zone name: int.demo.wsr -> Next -> Allow both nonsecure and secure dynamic updates, next -> Finish
+Тут теперь нажимаем правую кнопку мыши по int.demo.wsr -> New host (A or AAAA) -> name: srv -> IP Address: 192.168.106.200 -> Create Associated PTR record ставим галочку -> Add host.
+Так повторяем со всеми.
+
+Затем необходимо нажать ПКМ на SRV, в панеле слева -> Properties ->  Forwardes -> указываем IP адрес iSp -> Apply
