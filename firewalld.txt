@@ -1,37 +1,32 @@
-﻿1. firewalld находится на диске BD-1. Настройка выполняется на машинах RTR-L и RTR-R
-	apt-cdrom add - добавить репозиторий
-	apt update - обновить список пакетов
+3)FIREWALL
+	BD-1.
 
-	apt install firewalld - установка
-	systemctl status firewalld или service firewalld status - статус
+	apt install firewalld
+	systemctl status firewalld
 
-2. Узнаём названия интерфейсов и определяем, какой смотрит во внешнюю сеть (ISP), а какой в локальную
-	firewall-cmd --get-active-zones - отображение активный зон и интерфейсов
-	firewall-cmd --list-all-zones - отображение всех доступных зон
-	firewall-cmd --zone=<zone_name> --list-all - вывод всех настроек зоны
+	firewall-cmd --zone=public --remove-interface=ensXXX
+	firewall-cmd --zone=external --add-interface=ensXXX
+	firewall-cmd --zone=trusted --add-interface=ensXXX
 
-	Добавляем внешний интерфейс в зону external, внутренний в зону trusted
-	firewall-cmd --zone=<zone_name> --remove-interface=<interface_number> -удаление интерфейса из зоны
-	firewall-cmd --zone=<zone_name> --add-interface=<interface_number> - добавление интерфейса в зону
+	firewall-cmd --zone=external --add-service=http
+	firewall-cmd --zone=external --add-service=https
+	firewall-cmd --zone=external --add-service=dns
 
-	Проверяем, что интерфейсы добавились в необходимые зоны
-
-3. Настраиваем зону external. Каждый сервис - новая команда
 	firewall-cmd --zone=external --list-all
-	firewall-cmd --zone=external --add-service=<service_name> - разрешаем работу сервисам, указанным в задании (DNS, HTTP, HTTPS, SSH и т.д.)
-	На RTR-L настраиваем проброс портов:
-				- команда для проброса порта, подставляем нужные значения
-		RTR-L
+
+	RTR-L
 	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100
 	firewall-cmd --zone=external --add-forward-port=port=53:proto=udp:toport=53:toaddr=192.168.100.200
+	firewall-cmd --zone=external --add-forward-port=port=80:proto=udp:toport=80:toaddr=192.168.100.100
+
 		RTR-R
 	firewall-cmd --zone=external --add-forward-port=port=2244:proto=tcp:toport=22:toaddr=172.16.100.100
+	firewall-cmd --zone=external --add-forward-port=port=80:proto=tcp:toport=80:toaddr=172.16.100.100
 
-	На RTR-R и RTR-L разрешаем работу защищенного туннеля:
-	firewall-cmd --zone=external --add-port=<port_number>/udp - на WireGuard используется протокол UDP
+	На RTR-R и RTR-L
+	firewall-cmd --zone=external --add-port=12345/udp - WireGuard
 
-4. Завершение настройки
+	firewall-cmd --runtime-to-permanent
+	firewall-cmd --reload
 
-	firewall-cmd --runtime-to-permanent - сохранение настроек firewalld. Команда обязательна!
-	firewall-cmd --reload - перезагрузка правил и настроек (при необходимости)
-	firewall-cmd --complete-reload - перезагрузка правил и настроек со сбросом всех соединений (при крайней необходимости)
+	firewall-cmd --zone=external --list-all
