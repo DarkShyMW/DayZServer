@@ -17,7 +17,7 @@
 	RTR-L
 	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100
 	firewall-cmd --zone=external --add-forward-port=port=53:proto=udp:toport=53:toaddr=192.168.100.200
-	firewall-cmd --zone=external --add-forward-port=port=80:proto=udp:toport=80:toaddr=192.168.100.100
+	firewall-cmd --zone=external --add-forward-port=port=80:proto=tcp:toport=80:toaddr=192.168.100.100
 
 		RTR-R
 	firewall-cmd --zone=external --add-forward-port=port=2244:proto=tcp:toport=22:toaddr=172.16.100.100
