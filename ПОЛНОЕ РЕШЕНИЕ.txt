@@ -5,11 +5,11 @@
 1) Basic
 	apt-cdrom add
 	apt update
-	apt install network-manager	
+	apt install network-manager
 
 2)Routing ISP, RTR-L, RTR-R:
-	
-	vim /etc/sysctl.conf 
+
+	vim /etc/sysctl.conf
 		net.ipv4.ip_forward=1 - раскоментировать строчку и включить маршрутизацию на Debian
 	sysctl -p - активировать маршрутизацию
 
@@ -18,65 +18,65 @@
 
 	apt install firewalld
 	systemctl status firewalld
-	
+
 	firewall-cmd --zone=public --remove-interface=ensXXX
 	firewall-cmd --zone=external --add-interface=ensXXX
 	firewall-cmd --zone=trusted --add-interface=ensXXX
-	
+
 	firewall-cmd --zone=external --add-service=http
 	firewall-cmd --zone=external --add-service=https
 	firewall-cmd --zone=external --add-service=dns
 
 	firewall-cmd --zone=external --list-all
-		
+
 	RTR-L
-	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100 
+	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100
 	firewall-cmd --zone=external --add-forward-port=port=53:proto=udp:toport=53:toaddr=192.168.100.200
 	firewall-cmd --zone=external --add-forward-port=port=80:proto=udp:toport=80:toaddr=192.168.100.100
 
 		RTR-R
 	firewall-cmd --zone=external --add-forward-port=port=2244:proto=tcp:toport=22:toaddr=172.16.100.100
 	firewall-cmd --zone=external --add-forward-port=port=80:proto=tcp:toport=80:toaddr=172.16.100.100
-	
+
 	На RTR-R и RTR-L
 	firewall-cmd --zone=external --add-port=12345/udp - WireGuard
-	
+
 	firewall-cmd --runtime-to-permanent
 	firewall-cmd --reload
-	
+
 	firewall-cmd --zone=external --list-all
 
-4)WireGuard	
-	
+4)WireGuard
+
 	apt install wireguard wireguard-tools
 	mkdir /etc/wireguard/keys
 	cd /etc/wireguard/keys
 	Обе пары ключей делаем на RTR-L
 	wg genkey | tee serv-sec.key | wg pubkey > serv-pub.key - Server
 	wg genkey | tee cli-sec.key | wg pubkey > cli-pub.key - Client
-	
+
 	RTR-L
-	cat serv-priv.key cli-pub.key >> /etc/wireguard/wg0.conf 	
-		
+	cat serv-priv.key cli-pub.key >> /etc/wireguard/wg0.conf
+
 		[Interface]
-		Address = 10.20.30.1/30 
-		ListenPort = 12345 
+		Address = 10.20.30.1/30
+		ListenPort = 12345
 		PrivateKey = <Server_Private_Key> - serv-sec.key
 
 		[Peer]
 		PublicKey = <Client_Public_Key> - cli-pub.key
-		AllowedIPs = 10.20.30.0/30, 172.16.100.0/24 
+		AllowedIPs = 10.20.30.0/30, 172.16.100.0/24
 
 	systemctl enable --now wg-quick@wg0
 	wg show wg0 - проверяем состояние туннеля
-	
+
 	RTR-R
 	apt install wireguard wireguard-tools
 	mkdir /etc/wireguard/keys
-	
+
 	RTR-L
 	scp cli-sec.key cli-priv.key 5.5.5.100:/etc/wireguard/keys
-	
+
 	RTR-R
 	cat cli-sec.key serv-pub.key >> /etc/wireguard/wg0.conf
 	vim /etc/wireguard/wg0.conf
@@ -90,15 +90,15 @@
 		Endpoint = 4.4.4.100:12345
 		PersistentKeepalive = 10
 		AllowedIPs = 10.20.30.0/30, 192.168.100.0/24
-	
+
 	systemctl enable --now wg-quick@wg0
-	wg show wg0 
+	wg show wg0
 				ping ping ping
-5)DNS	
+5)DNS
 	BR1
 	apt install bind9 dnsutils bind9utils
 	systemctl status named или service named status
-	
+
 	vim /etc/bind/named.conf.options :
 			options {
 			directory "/var/cache/bind";
@@ -108,11 +108,11 @@
 			dnssec-validation no;
 			listen-on-v6 { none; };
 		};
-		
+
 	Настройки зоны demo.wsr
-	
+
 	vim /etc/bind/named.conf.local
-	
+
 			zone "demo.wsr" {
 					type master;
 					allow-transfer { 4.4.4.100; };
@@ -127,9 +127,9 @@
 	vim /etc/apparmor.d/usr.sbin.named
 		 "/opt/dns/** rw,"
 	service apparmor restart
-	
+
 	vim /opt/dns/demo.wsr.zone:
-	
+
 			$TTL    604800
 			@       IN      SOA     demo.wsr. root.demo.wsr.  //заменяем localhost на demo.wsr
 										  3         ; Serial // увеличиваем порядковый номер зоны на 1
@@ -146,8 +146,8 @@
 			www				A		4.4.4.100
 			www				A		5.5.5.100
 			internet		CNAME	isp
-	
-	
+
+
 6)NTP
 	ISP
 	apt install chrony
@@ -162,12 +162,12 @@
 			log tracking measurements statistics
 			logdir /var/log/chrony
 			#######
-	
+
 	timedatectl set-timezone Europe/Moscow
 	service chrony restart
 	chronyc sourses
 
-	ALL	
+	ALL
 	vim /etc/chrony/chrony.conf
 				#######
 			server srv.int.demo.wsr prefer iburst
@@ -177,57 +177,57 @@
 			log tracking measurements statistics
 			logdir /var/log/chrony
 			#######
-			
+
 	timedatectl set-timezone Europe/Moscow
 	service chrony restart
 	chronyc sourses
-	
+
 7)SMB
 	-----------SRV------
-	
+
 	На WEB-L и WEB-R
 
 	apt install cifs-utils
 	mkdir /opt/share
 	mount.cifs //SRV.int.demo.wsr/Share /opt/share -o user=Administrator,password=P@ssw0rd
 	umount /opt/share
-	
+
 	vim /etc/fstab
 
 		//SRV/Share	/opt/share	cifs	rw,username=Administrator,password=P@ssw0rd	0	0
-		
+
 7)Docker
 		BR1
 	apt install nginx lynx -y
-	nginx -t 
+	nginx -t
 		DockerDisk
 	mkdir /opt/docker
 	mount /dev/cdrom /mnt
 	cp /mnt/* /opt/docker
 
 	cd /opt/docker
-	tar -xvf appdockerdemo.tar.gz ( appdocker0.zip, Readme.txt)	
-	umount /mnt 
-	dpkg -i containerd* 
+	tar -xvf appdockerdemo.tar.gz ( appdocker0.zip, Readme.txt)
+	umount /mnt
+	dpkg -i containerd*
 	dpkg -i docker*
 	docker version
 
-	
-		
+
+
 		or Readme.txt
 
 	docker image load -i appdocker0.zip
 	docker image ls
 
 	docker run -d appdocker0
-	docker ps 
+	docker ps
 	docker container inspect <container_name> ----- IP (172.17.0.2)
-	
+
 	lynx http://172.17.0.2:5000
-	
+
 	cd /etc/nginx
 	mv sites-enabled/default  sites-enabled/webapp.conf
-	vim sites-available/webapp.conf		
+	vim sites-available/webapp.conf
 
 	БЕЗ СЕРТИФИКАТА:
 	server {
@@ -256,9 +256,9 @@
         ssl_certificate_key /etc/nginx/ssl/cert.key; //путь до pem-ключа сертификата
         location / {
 			proxy_pass http://<container_ip_address>:5000; - проксируем все запросы в наш контейнер
-		}        
+		}
 	}
 
-			
+
 	CLI
 	 www.demo.wsr/

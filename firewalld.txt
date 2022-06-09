@@ -9,24 +9,24 @@
 	firewall-cmd --get-active-zones - отображение активный зон и интерфейсов
 	firewall-cmd --list-all-zones - отображение всех доступных зон
 	firewall-cmd --zone=<zone_name> --list-all - вывод всех настроек зоны
-	
+
 	Добавляем внешний интерфейс в зону external, внутренний в зону trusted
 	firewall-cmd --zone=<zone_name> --remove-interface=<interface_number> -удаление интерфейса из зоны
 	firewall-cmd --zone=<zone_name> --add-interface=<interface_number> - добавление интерфейса в зону
-	
-	Проверяем, что интерфейсы добавились в необходимые зоны 
-	
+
+	Проверяем, что интерфейсы добавились в необходимые зоны
+
 3. Настраиваем зону external. Каждый сервис - новая команда
 	firewall-cmd --zone=external --list-all
 	firewall-cmd --zone=external --add-service=<service_name> - разрешаем работу сервисам, указанным в задании (DNS, HTTP, HTTPS, SSH и т.д.)
 	На RTR-L настраиваем проброс портов:
 				- команда для проброса порта, подставляем нужные значения
 		RTR-L
-	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100 
+	firewall-cmd --zone=external --add-forward-port=port=2222:proto=tcp:toport=22:toaddr=192.168.100.100
 	firewall-cmd --zone=external --add-forward-port=port=53:proto=udp:toport=53:toaddr=192.168.100.200
 		RTR-R
 	firewall-cmd --zone=external --add-forward-port=port=2244:proto=tcp:toport=22:toaddr=172.16.100.100
-	
+
 	На RTR-R и RTR-L разрешаем работу защищенного туннеля:
 	firewall-cmd --zone=external --add-port=<port_number>/udp - на WireGuard используется протокол UDP
 
