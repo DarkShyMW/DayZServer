@@ -48,7 +48,7 @@ server {
 	listen 80;
 	server_name www.demo.wsr;
 location / {
-		proxy_pass http://<container_ip_address>:5000;sys - проксируем все запросы в наш контейнер
+		proxy_pass http://<container_ip_address>:5000; - проксируем все запросы в наш контейнер
 	}
 }
 ########
